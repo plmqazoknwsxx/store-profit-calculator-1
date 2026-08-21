@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>開店會賺錢嗎？店鋪獲利計算機 (專業進階版)</title>
+  <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-main: #2c3e50;
+      --text-sub: #7f8c8d;
+      --primary: #3498db;
+      --border-color: #e2e8f0;
+      
+      --green: #2ecc71;
+      --yellow: #f1c40f;
+      --orange: #e67e22;
+      --red: #e74c3c;
+    }
+
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; line-height: 1.6; }
+    
+    /* 頂部導覽列 */
+    .navbar {
+      background: #2c3e50;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .nav-container {
+      max-width: 980px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+    }
+    .logo { font-weight: bold; font-size: 18px; color: #fff; text-decoration: none; }
+    .nav-links { display: flex; gap: 15px; }
+    .nav-links a { color: #ecf0f1; text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; }
+    .nav-links a:hover { color: var(--primary); }
+
+    .container { max-width: 980px; margin: 20px auto; padding: 0 20px; }
+    
+    .header { text-align: center; margin-bottom: 24px; }
+    .header h1 { margin: 0 0 8px 0; font-size: 28px; color: #1a202c; font-weight: 800; }
+    .header p { margin: 0; color: var(--text-sub); font-size: 14px; }
+
+    .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .card-title { font-size: 18px; font-weight: bold; margin-bottom: 16px; border-left: 4px solid var(--primary); padding-left: 10px; color: #2d3748; }
+
+    /* 表格樣式 (同行標準) */
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+    th, td { padding: 12px; border-bottom: 1px solid var(--border-color); }
+    th { background-color: #f8fafc; color: var(--text-main); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group label { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #4a5568; }
+    .form-group input, .form-group select { padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; }
+    .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+    .hint { font-size: 11px; color: var(--text-sub); margin-top: 4px; }
+
+    .btn-calc { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-calc:hover { background: #2980b9; }
+
+    #result-section { display: none; }
+    .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 20px; }
+
+    .metric-card { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; text-align: center; }
+    .metric-card .title { font-size: 12px; color: var(--text-sub); font-weight: 600; }
+    .metric-card .value { font-size: 20px; font-weight: bold; margin: 4px 0; color: #1a202c; }
+
+    .profit-dual-container {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .highlight-card {
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      transition: all 0.3s ease;
+      border: 2px solid var(--border-color);
+    }
+    .highlight-card .main-title { font-size: 13px; font-weight: bold; }
+    .highlight-card .profit-value { font-size: 24px; font-weight: 800; margin: 4px 0; }
+    .highlight-card .margin-value { 
+      font-size: 12px; 
+      font-weight: 700; 
+      display: inline-block; 
+      padding: 3px 12px; 
+      border-radius: 20px;
+      margin-top: 4px;
+    }
+
+    .group-amort {
+      grid-column: 1 / -1;
+      background: #fff7ed;
+      border: 1.5px solid #f97316;
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+    .group-amort .title { color: #c2410c; }
+    .group-amort .value { color: #ea580c; }
+
+    .group-bep { background: #eff6ff; border: 1.5px solid #93c5fd; }
+    .group-bep .title { color: #1d4ed8; }
+    .group-bep .value { color: #1e40af; }
+
+    .group-traffic { background: #f0fdf4; border: 1.5px solid #86efac; }
+    .group-traffic .title { color: #15803d; }
+    .group-traffic .value { color: #166534; }
+
+    .group-efficiency { background: #f5f3ff; border: 1.5px solid #c4b5fd; }
+    .group-efficiency .title { color: #6d28d9; }
+    .group-efficiency .value { color: #5b21b6; }
+
+    .indicator-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .indicator-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; }
+    .indicator-info { display: flex; flex-direction: column; }
+    .indicator-name { font-weight: bold; font-size: 14px; }
+    .indicator-detail { font-size: 12px; color: var(--text-sub); }
+    
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; color: white; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-green { background-color: var(--green); }
+    .badge-yellow { background-color: var(--yellow); color: #333; }
+    .badge-orange { background-color: var(--orange); }
+    .badge-red { background-color: var(--red); }
+
+    .alert-box { padding: 14px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; border-left: 5px solid; }
+    .alert-red { background-color: #fde8e8; border-color: var(--red); color: #9b1c1c; }
+    .alert-orange { background-color: #feecdc; border-color: var(--orange); color: #9a3412; }
+    .alert-blue { background-color: #e1effe; border-color: var(--primary); color: #1e429f; }
+    .alert-green { background-color: #def7ec; border-color: var(--green); color: #03543f; }
+
+    .btn-export { background: #2c3e50; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; }
+    .btn-export:hover { background: #1a252f; }
+
+    /* 文章區塊 */
+    .article-item { border-bottom: 1px solid var(--border-color); padding: 16px 0; }
+    .article-item:last-child { border-bottom: none; }
+    .article-title { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 6px; cursor: pointer; }
+    .article-excerpt { font-size: 13px; color: var(--text-sub); line-height: 1.6; }
+    .article-btn { display: inline-block; margin-top: 8px; font-size: 12px; color: var(--primary); font-weight: bold; cursor: pointer; }
+
+    /* 彈出視窗 (Modal) */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+    .modal-content { background: white; border-radius: 12px; max-width: 650px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 24px; position: relative; }
+    .modal-close { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #999; }
+
+    /* 頁尾 */
+    footer { background: #2c3e50; color: #ecf0f1; text-align: center; padding: 24px 16px; margin-top: 40px; font-size: 13px; }
+    footer a { color: #3498db; text-decoration: none; margin: 0 8px; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      body { padding: 0; }
+      .container { padding: 12px; }
+      .header h1 { font-size: 22px; }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .profit-dual-container { grid-template-columns: 1fr; }
+      .indicator-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .badge { align-self: flex-start; }
+      .btn-export { width: 100%; }
+      .nav-container { flex-direction: column; gap: 10px; text-align: center; }
+    }
+
+    @media print {
+      body { background-color: #fff; padding: 0; }
+      .container { max-width: 100%; }
+      .no-print, #calc-form, .footer, .btn-export, .navbar, #benchmarks, #articles { display: none !important; }
+      .card { box-shadow: none; border: 1px solid #ccc; margin-bottom: 12px; page-break-inside: avoid; }
+      #result-section { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 頂部導覽列 -->
+<nav class="navbar no-print">
+  <div class="nav-container">
+    <a href="#" class="logo">🐾 面攤貓店鋪獲利診斷室</a>
+    <div class="nav-links">
+      <a href="#calc-form">🧮 獲利計算機</a>
+      <a href="#benchmarks">📊 同行標準</a>
+      <a href="#other-tools" onclick="openModal('other-tools-modal'); return false;">💡 其他計算機</a>
+      <a href="#articles">📚 營運知識庫</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="header">
+    <h1>開店會賺錢嗎？店鋪獲利計算機</h1>
+    <p>實務精準拆算｜保本門檻・外送淨利・設備折舊・老闆薪資比一比</p>
+  </div>
+
+  <!-- 第一排：計算機輸入框 -->
+  <form id="calc-form" onsubmit="event.preventDefault(); calculateDiagnosis();">
+    <!-- 1. 基本資料 -->
+    <div class="card">
+      <div class="card-title">1. 門市基本資料</div>
+      <div class="grid">
+        <div class="form-group">
+          <label for="industry">業態類別</label>
+          <select id="industry" required>
+            <option value="drink">🧋 手搖飲料店</option>
+            <option value="ice">🍧 冰品 / 豆花 / 甜品</option>
+            <option value="fried">🍗 炸雞 / 鹽酥雞 / 滷味</option>
+            <option value="bento_health">🥗 健康餐盒 / 輕食便當</option>
+            <option value="bento_trad" selected>🍱 傳統便當 / 自助快餐</option>
+            <option value="noodle">🍜 麵食 / 小吃 / 街邊店</option>
+            <option value="dinetin">🍲 內用餐廳 / 火鍋</option>
+            <option value="cafe">☕ 咖啡廳 / 甜點專賣</option>
+            <option value="cloud_kitchen">☁️ 雲端廚房 / 純外送</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="ping">營業坪數 (坪)</label>
+          <input type="number" id="ping" value="10" min="1" step="0.5" required>
+        </div>
+        <div class="form-group">
+          <label for="labor_hours">全店每日總工時 (小時)</label>
+          <input type="number" id="labor_hours" value="20" min="1" max="500" required>
+          <span class="hint">全體員工+老闆每日工作時數總和（例：2人各做10小時即填20）</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 開店投資與攤提 -->
+    <div class="card">
+      <div class="card-title">2. 開店投資與設備攤提 (可填 0)</div>
+      <div class="grid">
+        <div class="form-group">
+          <label for="capital_invest">開店總投資金額 (萬元)</label>
+          <input type="number" id="capital_invest" value="150" min="0" step="1" required>
+          <span class="hint">含裝修、設備購入等（若不打算計算攤提請填 0）</span>
+        </div>
+        <div class="form-group">
+          <label for="amort_months">預定攤提月數 (月)</label>
+          <input type="number" id="amort_months" value="36" min="1" max="120" required>
+          <span class="hint">通常裝修/設備建議以 36 個月 (3年) 攤提</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 營收與客單 -->
+    <div class="card">
+      <div class="card-title">3. 月營業額與客單價</div>
+      <div class="grid">
+        <div class="form-group">
+          <label for="revenue_total">每月總營業額 (萬元, 含外送)</label>
+          <input type="number" id="revenue_total" value="50" min="0.1" step="0.1" required>
+        </div>
+        <div class="form-group">
+          <label for="revenue_delivery">外送平台營業額 (萬元)</label>
+          <input type="number" id="revenue_delivery" value="10" min="0" step="0.1" required>
+          <span class="hint">UberEats / Foodpanda 等業績</span>
+        </div>
+        <div class="form-group">
+          <label for="avg_ticket">平均客單價 (元)</label>
+          <input type="number" id="avg_ticket" value="120" min="1" required>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 成本細項 -->
+    <div class="card">
+      <div class="card-title">4. 每月成本與隱形耗損 (單位：萬元)</div>
+      <div class="grid">
+        <div class="form-group">
+          <label for="cost_food">食材進貨成本 (萬元)</label>
+          <input type="number" id="cost_food" value="20" min="0" step="0.1" required>
+        </div>
+        <div class="form-group">
+          <label for="cost_package">外帶/外送包材成本 (萬元)</label>
+          <input type="number" id="cost_package" value="1.5" min="0" step="0.1" required>
+        </div>
+        <div class="form-group">
+          <label for="cost_discount">活動折扣與折讓金額 (萬元)</label>
+          <input type="number" id="cost_discount" value="1.0" min="0" step="0.1" required>
+          <span class="hint">買一送一、滿額折抵、優惠券等金額</span>
+        </div>
+        <div class="form-group">
+          <label for="cost_waste">報廢與損耗金額 (萬元)</label>
+          <input type="number" id="cost_waste" value="0.8" min="0" step="0.1" required>
+          <span class="hint">含外送棄單、食材報廢、做錯餐</span>
+        </div>
+        <div class="form-group">
+          <label for="cost_rent">房租場地費 (萬元)</label>
+          <input type="number" id="cost_rent" value="5" min="0" step="0.1" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="cost_labor_total">全店總人力薪資 (萬元, 含老闆)</label>
+          <input type="number" id="cost_labor_total" value="12.5" min="0" step="0.1" required>
+          <span class="hint">包含正職、PT、勞健保與老闆自己</span>
+        </div>
+        <div class="form-group">
+          <label for="cost_labor_boss">（其中）老闆預期合理月薪 (萬元)</label>
+          <input type="number" id="cost_labor_boss" value="4.5" min="0" step="0.1" required>
+          <span class="hint">扣除此薪資後的淨利才是店面實賺</span>
+        </div>
+
+        <div class="form-group">
+          <label for="cost_delivery_comm">外送平台抽成金額 (萬元)</label>
+          <input type="number" id="cost_delivery_comm" value="3.2" min="0" step="0.1" required>
+          <span class="hint">平台抽成 30%~35% 之實際扣款</span>
+        </div>
+        <div class="form-group">
+          <label for="cost_payment_fee">金流與刷卡手續費 (萬元)</label>
+          <input type="number" id="cost_payment_fee" value="0.4" min="0" step="0.05" required>
+          <span class="hint">信用卡、LINE Pay、街口等手續費</span>
+        </div>
+        <div class="form-group">
+          <label for="cost_marketing">獨立行銷廣告費 (萬元)</label>
+          <input type="number" id="cost_marketing" value="0.5" min="0" step="0.1" required>
+          <span class="hint">FB/IG 廣告、傳單、門市活動費</span>
+        </div>
+
+        <div class="form-group">
+          <label for="cost_utility">水電瓦斯 + 雜費 (萬元)</label>
+          <input type="number" id="cost_utility" value="2.0" min="0" step="0.1" required>
+        </div>
+        <div class="form-group">
+          <label for="cost_tax">稅金 (萬元)</label>
+          <input type="number" id="cost_tax" value="0.5" min="0" step="0.1" required>
+          <span class="hint">營業稅 (1%或5%)、所得稅預留</span>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-calc">開始全方位診斷 🚀</button>
+  </form>
+
+  <!-- 診斷報告輸出區 (算完後平滑捲動到這裡) -->
+  <div id="result-section" class="card" style="margin-top: 24px;">
+    <div class="card-title">診斷報告與實務戰術建議</div>
+
+    <div class="dashboard-grid">
+      <div class="profit-dual-container">
+        <div class="highlight-card" id="card-net-profit">
+          <div class="main-title" id="title-net-profit">扣除攤提淨利 (會計純利)</div>
+          <div class="profit-value" id="res-net-profit">0 萬</div>
+          <div class="margin-value" id="res-net-margin">純利率 0%</div>
+        </div>
+
+        <div class="highlight-card" id="card-cash-profit">
+          <div class="main-title" id="title-cash-profit">不含攤提淨利 (落袋現金流)</div>
+          <div class="profit-value" id="res-cash-profit">0 萬</div>
+          <div class="margin-value" id="res-cash-margin">現金流率 0%</div>
+        </div>
+
+        <div class="highlight-card" id="card-delivery-profit">
+          <div class="main-title" id="title-delivery-profit">外送專屬淨利潤</div>
+          <div class="profit-value" id="res-delivery-profit">0 萬</div>
+          <div class="margin-value" id="res-delivery-margin">外送淨利率 0%</div>
+        </div>
+      </div>
+
+      <div class="group-amort">
+        <div class="title">每月設備/裝修折舊與攤提</div>
+        <div class="value" id="res-monthly-amort">0 萬</div>
+        <div class="title" id="res-payback-period" style="font-weight: bold; margin-top: 4px;">預計回本期：--</div>
+      </div>
+
+      <div class="metric-card group-bep">
+        <div class="title">月保本營業額 (BEP)</div>
+        <div class="value" id="res-bep-monthly">0 萬</div>
+        <div class="title" id="res-bep-pure-store">純實體保本: -- 萬</div>
+      </div>
+      
+      <div class="metric-card group-bep">
+        <div class="title">日保本營業額 (BEP)</div>
+        <div class="value" id="res-bep-daily">0 元</div>
+        <div class="title" id="res-bep-count">每日需 0 來客保本</div>
+      </div>
+
+      <div class="metric-card group-traffic">
+        <div class="title">每月來客數</div>
+        <div class="value" id="res-monthly-customers">0 人</div>
+        <div class="title">估算每月交易筆數</div>
+      </div>
+
+      <div class="metric-card group-traffic">
+        <div class="title">每日來客數</div>
+        <div class="value" id="res-daily-customers">0 人</div>
+        <div class="title">估算每日交易筆數</div>
+      </div>
+
+      <div class="metric-card group-efficiency">
+        <div class="title">月坪效</div>
+        <div class="value" id="res-ping-efficiency">0 元</div>
+        <div class="title">每坪每月創造營業額</div>
+      </div>
+
+      <div class="metric-card group-efficiency">
+        <div class="title">人時效</div>
+        <div class="value" id="res-labor-efficiency">0 元</div>
+        <div class="title">每人每小時創造營業額</div>
+      </div>
+    </div>
+
+    <div style="font-weight: bold; margin-bottom: 10px; font-size: 15px;">📊 關鍵成本五燈號診斷：</div>
+    <div class="indicator-list">
+      <div class="indicator-item">
+        <div class="indicator-info">
+          <span class="indicator-name">食材成本占比</span>
+          <span class="indicator-detail" id="detail-food">--</span>
+        </div>
+        <div id="badge-food" class="badge">--</div>
+      </div>
+
+      <div class="indicator-item">
+        <div class="indicator-info">
+          <span class="indicator-name">包材成本占比</span>
+          <span class="indicator-detail" id="detail-package">--</span>
+        </div>
+        <div id="badge-package" class="badge">--</div>
+      </div>
+
+      <div class="indicator-item">
+        <div class="indicator-info">
+          <span class="indicator-name">房租成本占比</span>
+          <span class="indicator-detail" id="detail-rent">--</span>
+        </div>
+        <div id="badge-rent" class="badge">--</div>
+      </div>
+
+      <div class="indicator-item">
+        <div class="indicator-info">
+          <span class="indicator-name">總人力成本占比 (含老闆薪資)</span>
+          <span class="indicator-detail" id="detail-labor">--</span>
+        </div>
+        <div id="badge-labor" class="badge">--</div>
+      </div>
+
+      <div class="indicator-item">
+        <div class="indicator-info">
+          <span class="indicator-name">損耗與廢棄占比</span>
+          <span class="indicator-detail" id="detail-waste">--</span>
+        </div>
+        <div id="badge-waste" class="badge">--</div>
+      </div>
+    </div>
+
+    <div style="font-weight: bold; margin-bottom: 10px; font-size: 15px;">💡 綜合營運診斷與作戰建議：</div>
+    <div id="alert-container"></div>
+
+    <div style="text-align: center; margin-top: 24px;" class="no-print">
+      <button class="btn-export" onclick="window.print()">🖨️ 列印 / 儲存 PDF 診斷報告</button>
+    </div>
+  </div>
+
+  <!-- 第二排：查看同行標準區塊 -->
+  <div class="card" id="benchmarks" style="margin-top: 30px;">
+    <div class="card-title">📊 各大餐飲業態黃金成本結構對照表 (同行標準)</div>
+    <p style="font-size: 13px; color: var(--text-sub);">算完自己的數字後，快來對照同行的黃金比例，看看你的店在哪個項目有優化空間！</p>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>業態類別</th>
+            <th>食材進貨 (上限)</th>
+            <th>包材費用</th>
+            <th>租金佔比</th>
+            <th>總人力薪資</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>🍱 便當 / 快餐店</td><td>45% ~ 58%</td><td>4% ~ 5%</td><td>10% 以內</td><td>30% 以內</td></tr>
+          <tr><td>🍜 麵食 / 小吃街邊店</td><td>43% ~ 55%</td><td>4% 以內</td><td>12% 以內</td><td>30% 以內</td></tr>
+          <tr><td>🧋 手搖飲料店</td><td>38% ~ 43%</td><td>5% 以內</td><td>12% 以內</td><td>25% 以內</td></tr>
+          <tr><td>🍗 炸雞 / 鹽酥雞</td><td>48% ~ 55%</td><td>5% 以內</td><td>10% 以內</td><td>25% 以內</td></tr>
+          <tr><td>🍲 內用餐廳 / 火鍋</td><td>38% ~ 45%</td><td>2% 以內</td><td>15% 以內</td><td>35% 以內</td></tr>
+          <tr><td>☕ 咖啡廳 / 甜點店</td><td>32% ~ 40%</td><td>4% 以內</td><td>18% 以內</td><td>32% 以內</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 第三排：5 篇營運知識庫文章 -->
+  <div class="card" id="articles">
+    <div class="card-title">📚 門市經營實戰知識庫</div>
+    
+    <div class="article-item">
+      <div class="article-title" onclick="openModal('art1')">1. 店裡明明有賺錢，為什麼口袋沒現金？揭開「隱形成本」陷阱</div>
+      <div class="article-excerpt">許多餐飲與零售老闆在月底看報表時發現有盈餘，但銀行帳戶裡的現金卻越來越少。這通常是因為忽略了報廢損耗、活動折讓與刷卡金流手續費...</div>
+      <span class="article-btn" onclick="openModal('art1')">閱讀完整文章 ➔</span>
+    </div>
+
+    <div class="article-item">
+      <div class="article-title" onclick="openModal('art2')">2. 食材成本佔比過高？餐飲老闆必學的 4 個控管降本技巧</div>
+      <div class="article-excerpt">當食材與原物料佔比超過 40% 時，利潤空間就會被極大壓縮。本文分享如何透過菜單集中採購、標準化 SOP 配方與減損管理來控制成本...</div>
+      <span class="article-btn" onclick="openModal('art2')">閱讀完整文章 ➔</span>
+    </div>
+
+    <div class="article-item">
+      <div class="article-title" onclick="openModal('art3')">3. 外送平台抽成 33% 真的有賺嗎？拆解外送真實純利與保本線</div>
+      <div class="article-excerpt">外送看似帶動了營業額，但如果扣除平台抽成、專屬包材與外送報廢後，很可能每一單都在虧損！教你如何計算外送專屬損益...</div>
+      <span class="article-btn" onclick="openModal('art3')">閱讀完整文章 ➔</span>
+    </div>
+
+    <div class="article-item">
+      <div class="article-title" onclick="openModal('art4')">4. 房租超過營收多少算危險？實體店面選址與坪效評估全攻略</div>
+      <div class="article-excerpt">房租是無法隨意調降的固定成本。如果租金佔比高於 15%，唯一的出路就是提升坪效與客單價。本文教你如何精算每坪創造的營收價值...</div>
+      <span class="article-btn" onclick="openModal('art4')">閱讀完整文章 ➔</span>
+    </div>
+
+    <div class="article-item">
+      <div class="article-title" onclick="openModal('art5')">5. 老闆沒拿薪資不算賺錢！如何計算合理的設備折舊與回本期</div>
+      <div class="article-excerpt">很多新手老闆把店面剩餘的錢全當成利潤，卻忘了扣除自己的合理薪資與當初投入的設備裝修折舊。學會計算會計純利，才能真正掌握店舖體質...</div>
+      <span class="article-btn" onclick="openModal('art5')">閱讀完整文章 ➔</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- 文章與資訊彈出視窗 (Modals) -->
+<div id="art1" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal('art1')">&times;</span><h3>店裡明明有賺錢，為什麼口袋沒現金？揭開「隱形成本」陷阱</h3><p>許多老闆經營店面時，只計算「進貨成本」與「房租人事」，卻漏掉了許多每天都在發生的隱形成本。例如：客人點餐優惠折扣、平台手續費、食材過期報廢、甚至包材消耗。</p><p>當這些細項加總起來時，往往會吞噬掉 5%~10% 的利潤。建議老闆們使用我們的<b>【店鋪獲利計算機】</b>，將折扣、報廢與金流手續費詳細輸入，釐清真正的現金流落袋金額。</p></div></div>
+
+<div id="art2" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal('art2')">&times;</span><h3>食材成本佔比過高？餐飲老闆必學的 4 個控管降本技巧</h3><p>當食材原物料成本居高不下時，請試試以下 4 個降本方針：</p><ol><li><b>精簡菜單品項：</b>減少備料種類，提高單一原物料的採購量以爭取議價空間。</li><li><b>建立標準配方 (SOP)：</b>使用定量勺與電子秤，確保每份產品用量一致。</li><li><b>定期盤點報廢率：</b>記錄每日廢棄食材，檢討過度備料原因。</li><li><b>彈性調整售價：</b>對原物料漲幅過高的品項進行微幅調價或更換組合。</li></ol></div></div>
+
+<div id="art3" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal('art3')">&times;</span><h3>外送平台抽成 33% 真的有賺嗎？拆解外送真實純利與保本線</h3><p>外送平台的抽成比例普遍在 30%~35% 之間。若餐點食材成本為 40%、包材為 5%，再加上平台抽成 33%，光是變動成本就高達 78%！這意味著外送的毛利率僅剩 22%。</p><p>若要靠外送賺錢，建議專門設立外送限定菜單、適度拉高外送售價，或控制外送專用包材成本。</p></div></div>
+
+<div id="art4" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal('art4')">&times;</span><h3>房租超過營收多少算危險？實體店面選址與坪效評估全攻略</h3><p>對於一般實體門市而言，房租佔營業額的黃金比例應控制在 <b>10%~12%</b> 以內，若超過 15% 則屬於高風險區間。</p><p>坪效（每月每坪創造的營業額）是衡量店面空間利用率的最佳指標。坪效越高，代表每單位租金帶來的效益越大。</p></div></div>
+
+<div id="art5" class="modal"><div class="modal-content"><span class="modal-close" onclick="closeModal('art5')">&times;</span><h3>老闆沒拿薪資不算賺錢！如何計算合理的設備折舊與回本期</h3><p>許多老闆開店後每個月拿 4 萬元回家，就以為店裡賺了 4 萬元。但如果老闆親自下場工作的合理市場薪資就是 4 萬，這代表這間店的「淨利潤」其實是 0 元！</p><p>正確的獲利計算，必須先扣除老闆自己的合理薪資，再扣除當初開店裝修與設備的月攤提費用（總投資額 ÷ 36個月），剩餘的才是店面真正賺到的純利。</p></div></div>
+
+<!-- 其他計算機 Modal -->
+<div id="other-tools-modal" class="modal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeModal('other-tools-modal')">&times;</span>
+    <h3>🧮 面攤貓系列 - 店鋪專用計算機</h3>
+    <p style="font-size:13px; color:#666;">更多店面營運工具開發中，敬請期待！</p>
+    <ul>
+      <li><b>【外送平台專用折讓與純利計算機】</b> (即將推出)</li>
+      <li><b>【食材報廢與損耗率評估試算表】</b> (即將推出)</li>
+      <li><b>【門市坪效與人時效提升分析器】</b> (即將推出)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 隱私條款 Modal -->
+<div id="privacy-modal" class="modal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeModal('privacy-modal')">&times;</span>
+    <h3>🔒 隱私權政策 (Privacy Policy)</h3>
+    <p>歡迎使用「面攤貓店鋪獲利診斷室」（以下簡稱本網站）。為了讓您能安心使用本網站的各項服務與資訊，特此向您說明本網站的隱私權保護政策：</p>
+    <p><b>1. 資料收集與使用：</b>本網站所提供之計算工具完全於您的瀏覽器端（Client-side）執行，我們不會在伺服器端收集或儲存您所輸入的任何營業額、成本或財務數據。</p>
+    <p><b>2. Cookie 與 Google 廣告：</b>本網站可能使用 Cookie 技術以提供更好的使用者體驗。未來若接入 Google AdSense 廣告服務，Google 會使用 Cookie 來根據使用者先前造訪本網站或全球其他網站的記錄，對使用者投放廣告。</p>
+  </div>
+</div>
+
+<!-- 服務條款 Modal -->
+<div id="terms-modal" class="modal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeModal('terms-modal')">&times;</span>
+    <h3>📜 服務條款 (Terms of Service)</h3>
+    <p><b>1. 免責聲明：</b>本網站所提供之店鋪獲利診斷、保本點試算與各項財務數據分析，僅供門市經營者參考與自我評估。實際營運狀況可能受市場變化、稅務政策等因素影響，本網站不保證試算結果之絕對精準性，亦不負擔任何投資或商業決策之損益責任。</p>
+    <p><b>2. 智慧財產權：</b>本網站之網頁架構、診斷邏輯與知識庫文章，均為面攤貓個人工作室所有，未經授權請勿擅自複製或作為商業用途。</p>
+  </div>
+</div>
+
+<!-- 第四排：網站頁尾 -->
+<footer class="no-print">
+  <p>© 2026 面攤貓個人工作室 | Store Profit Lab. All Rights Reserved.</p>
+  <p>
+    <a href="#" onclick="openModal('privacy-modal'); return false;">隱私權政策</a> | 
+    <a href="#" onclick="openModal('terms-modal'); return false;">服務條款</a> | 
+    聯絡我們：<a href="mailto:a0916138200@yahoo.com.tw">a0916138200@yahoo.com.tw</a>
+  </p>
+</footer>
+
+<script>
+const INDUSTRY_SPECS = {
+  drink:        { name: "手搖飲料店", food: [38, 43], pkg: 5, rent: 12, labor: 25 },
+  ice:          { name: "冰品/豆花/甜品", food: [30, 35], pkg: 5, rent: 12, labor: 25 },
+  fried:        { name: "炸雞/鹽酥雞/滷味", food: [48, 55], pkg: 5, rent: 10, labor: 25 },
+  bento_health: { name: "健康餐盒/輕食", food: [38, 45], pkg: 5, rent: 12, labor: 30 },
+  bento_trad:   { name: "傳統便當/快餐", food: [45, 58], pkg: 4, rent: 10, labor: 30 },
+  noodle:       { name: "麵食/小吃/街邊", food: [43, 55], pkg: 4, rent: 12, labor: 30 },
+  dinetin:      { name: "內用餐廳/火鍋", food: [38, 45], pkg: 2, rent: 15, labor: 35 },
+  cafe:         { name: "咖啡廳/甜點", food: [32, 40], pkg: 4, rent: 18, labor: 32 },
+  cloud_kitchen:{ name: "雲端廚房/純外送", food: [45, 55], pkg: 8, rent: 8, labor: 25 }
+};
+
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+function setCardStatus(cardId, titleId, valId, marginId, isProfit) {
+  const card = document.getElementById(cardId);
+  const title = document.getElementById(titleId);
+  const val = document.getElementById(valId);
+  const margin = document.getElementById(marginId);
+
+  if (isProfit) {
+    card.style.background = '#f0fdf4';
+    card.style.borderColor = '#2ecc71';
+    title.style.color = '#166534';
+    val.style.color = '#15803d';
+    margin.style.background = '#d1fae5';
+    margin.style.color = '#047857';
+  } else {
+    card.style.background = '#fde8e8';
+    card.style.borderColor = '#e74c3c';
+    title.style.color = '#9b1c1c';
+    val.style.color = '#9b1c1c';
+    margin.style.background = '#fcd34d';
+    margin.style.color = '#78350f';
+  }
+}
+
+function calculateDiagnosis() {
+  const indKey = document.getElementById('industry').value;
+  const spec = INDUSTRY_SPECS[indKey];
+  const ping = parseFloat(document.getElementById('ping').value);
+  const laborHours = parseFloat(document.getElementById('labor_hours').value);
+
+  const capInvest = parseFloat(document.getElementById('capital_invest').value) || 0;
+  const amortMonths = parseFloat(document.getElementById('amort_months').value) || 36;
+  const monthlyAmort = capInvest > 0 ? capInvest / amortMonths : 0;
+
+  const revTotal = parseFloat(document.getElementById('revenue_total').value);
+  const revDeliv = parseFloat(document.getElementById('revenue_delivery').value);
+  const avgTicket = parseFloat(document.getElementById('avg_ticket').value);
+
+  const cFood = parseFloat(document.getElementById('cost_food').value);
+  const cPkg = parseFloat(document.getElementById('cost_package').value);
+  const cDisc = parseFloat(document.getElementById('cost_discount').value);
+  const cWaste = parseFloat(document.getElementById('cost_waste').value);
+  const cRent = parseFloat(document.getElementById('cost_rent').value);
+  
+  const cLaborTotal = parseFloat(document.getElementById('cost_labor_total').value);
+  const cBoss = parseFloat(document.getElementById('cost_labor_boss').value);
+  
+  const cDelivComm = parseFloat(document.getElementById('cost_delivery_comm').value);
+  const cPaymentFee = parseFloat(document.getElementById('cost_payment_fee').value);
+  const cMkt = parseFloat(document.getElementById('cost_marketing').value);
+  const cUtil = parseFloat(document.getElementById('cost_utility').value);
+  const cTax = parseFloat(document.getElementById('cost_tax').value);
+
+  const totalCostWithAmort = cFood + cPkg + cDisc + cWaste + cRent + cLaborTotal + cDelivComm + cPaymentFee + cMkt + cUtil + cTax + monthlyAmort;
+  const netProfit = revTotal - totalCostWithAmort;
+  const cashProfit = netProfit + monthlyAmort;
+  
+  const netMargin = (netProfit / revTotal) * 100;
+  const cashMargin = (cashProfit / revTotal) * 100;
+
+  const delivRatio = revTotal > 0 ? (revDeliv / revTotal) : 0;
+  const delivFoodCost = cFood * delivRatio;
+  const delivPkgCost = cPkg * delivRatio;
+  const delivWasteCost = cWaste * delivRatio;
+  const delivNetProfit = revDeliv > 0 ? (revDeliv - delivFoodCost - delivPkgCost - delivWasteCost - cDelivComm) : 0;
+  const delivNetMargin = revDeliv > 0 ? (delivNetProfit / revDeliv) * 100 : 0;
+
+  let paybackMonthsStr = "不計算 (無攤提)";
+  let isAmortQualified = true;
+
+  if (capInvest > 0) {
+    if (cashProfit > 0) {
+      const pMonths = capInvest / cashProfit;
+      paybackMonthsStr = pMonths < 12 ? `${pMonths.toFixed(1)} 個月` : `${(pMonths / 12).toFixed(1)} 年`;
+      isAmortQualified = pMonths <= amortMonths;
+    } else {
+      paybackMonthsStr = "無法回收 (虧損中)";
+      isAmortQualified = false;
+    }
+  }
+
+  setCardStatus('card-net-profit', 'title-net-profit', 'res-net-profit', 'res-net-margin', netProfit >= 0);
+  document.getElementById('res-net-profit').innerText = netProfit.toFixed(2) + " 萬";
+  document.getElementById('res-net-margin').innerText = `純利率 ${netMargin.toFixed(1)}%`;
+
+  setCardStatus('card-cash-profit', 'title-cash-profit', 'res-cash-profit', 'res-cash-margin', cashProfit >= 0);
+  document.getElementById('res-cash-profit').innerText = cashProfit.toFixed(2) + " 萬";
+  document.getElementById('res-cash-margin').innerText = `現金流率 ${cashMargin.toFixed(1)}%`;
+
+  setCardStatus('card-delivery-profit', 'title-delivery-profit', 'res-delivery-profit', 'res-delivery-margin', delivNetProfit >= 0);
+  document.getElementById('res-delivery-profit').innerText = delivNetProfit.toFixed(2) + " 萬";
+  document.getElementById('res-delivery-margin').innerText = `外送淨利率 ${delivNetMargin.toFixed(1)}%`;
+
+  document.getElementById('res-monthly-amort').innerText = monthlyAmort > 0 ? monthlyAmort.toFixed(2) + " 萬" : "0 萬 (無攤提)";
+  
+  const paybackEl = document.getElementById('res-payback-period');
+  if (capInvest === 0) {
+    paybackEl.innerHTML = `預計回本期：<span style="color:#2ecc71;">無需攤提 🟢</span>`;
+  } else if (isAmortQualified) {
+    paybackEl.innerHTML = `預計回本期：<span style="color:#2ecc71;">${paybackMonthsStr} (攤提合格 🟢)</span>`;
+  } else {
+    paybackEl.innerHTML = `預計回本期：<span style="color:#e74c3c;">${paybackMonthsStr} (攤提過長/超標 🔴)</span>`;
+  }
+
+  const monthlyCustomers = Math.round((revTotal * 10000) / avgTicket);
+  const dailyCustomers = Math.round(monthlyCustomers / 30);
+  const monthlyLaborHours = laborHours * 30;
+  const laborEfficiency = Math.round((revTotal * 10000) / monthlyLaborHours);
+  const pingEfficiency = Math.round((revTotal * 10000) / ping);
+
+  document.getElementById('res-monthly-customers').innerText = monthlyCustomers.toLocaleString() + " 人";
+  document.getElementById('res-daily-customers').innerText = dailyCustomers.toLocaleString() + " 人";
+  document.getElementById('res-labor-efficiency').innerText = laborEfficiency.toLocaleString() + " 元";
+  document.getElementById('res-ping-efficiency').innerText = pingEfficiency.toLocaleString() + " 元";
+
+  const baseVarRatio = (cFood + cPkg + cDisc + cWaste + cPaymentFee) / revTotal;
+  const pureStoreContributionMargin = 1 - baseVarRatio;
+  const delivCommRate = revDeliv > 0 ? (cDelivComm / revDeliv) : 0.32;
+  const delivContributionMargin = pureStoreContributionMargin - delivCommRate;
+  const blendedContributionMargin = (1 - delivRatio) * pureStoreContributionMargin + delivRatio * delivContributionMargin;
+  
+  const fixCosts = cRent + cLaborTotal + cMkt + cUtil + cTax + monthlyAmort;
+  
+  let bepMonthly = blendedContributionMargin > 0 ? fixCosts / blendedContributionMargin : revTotal * 2;
+  let bepPureStore = pureStoreContributionMargin > 0 ? fixCosts / pureStoreContributionMargin : revTotal * 1.5;
+  let bepDailyRev = (bepMonthly * 10000) / 30;
+  let bepDailyCount = Math.ceil(bepDailyRev / avgTicket);
+
+  document.getElementById('res-bep-monthly').innerText = bepMonthly.toFixed(2) + " 萬";
+  document.getElementById('res-bep-pure-store').innerText = `純內用/外帶保本: ${bepPureStore.toFixed(2)} 萬`;
+  document.getElementById('res-bep-daily').innerText = Math.round(bepDailyRev).toLocaleString() + " 元";
+  document.getElementById('res-bep-count').innerText = `每日需 ${bepDailyCount} 來客保本`;
+
+  const [fLow, fHigh] = spec.food;
+  const fMid = (fLow + fHigh) / 2;
+  const rFood = (cFood / revTotal) * 100;
+  const rPkg = (cPkg / revTotal) * 100;
+  const rRent = (cRent / revTotal) * 100;
+  const rLabor = (cLaborTotal / revTotal) * 100;
+  const rWaste = (cWaste / revTotal) * 100;
+
+  renderBadge('badge-food', 'detail-food', getRangeLight(rFood, fLow, fMid, fHigh), `${rFood.toFixed(1)}%`, `標準: ${fLow}%~${fHigh}%`);
+  renderBadge('badge-package', 'detail-package', getLimitLight(rPkg, spec.pkg), `${rPkg.toFixed(1)}%`, `上限: ${spec.pkg}%`);
+  renderBadge('badge-rent', 'detail-rent', getLimitLight(rRent, spec.rent), `${rRent.toFixed(1)}%`, `上限: ${spec.rent}%`);
+  renderBadge('badge-labor', 'detail-labor', getLimitLight(rLabor, spec.labor), `${rLabor.toFixed(1)}%`, `上限: ${spec.labor}%`);
+  renderBadge('badge-waste', 'detail-waste', getLimitLight(rWaste, 3.0), `${rWaste.toFixed(1)}%`, `上限: 3.0%`);
+
+  const alertBox = document.getElementById('alert-container');
+  alertBox.innerHTML = '';
+
+  if (netProfit < 0) {
+    alertBox.innerHTML += `
+      <div class="alert-box alert-red">
+        <strong>⚠️ 創業決策警示：門市正處於「補貼營運」狀態！</strong><br>
+        扣除預期合理月薪 (${cBoss} 萬) 與每月折舊 (${monthlyAmort.toFixed(2)} 萬) 後，會計純利為 <strong>${netProfit.toFixed(2)} 萬元</strong>。<br>
+        雖然每月仍有 <strong>${cashProfit.toFixed(2)} 萬元</strong> 的現金落袋，但實質上這是在消耗設備與裝修的價值！<br>
+        👉 <strong>作戰方針：</strong> 請優先控管食材與人力成本，拉高客單價，否則未來設備損壞將無資金更換。
+      </div>`;
+  } else {
+    alertBox.innerHTML += `
+      <div class="alert-box alert-green">
+        <strong>🏆 創業決策診斷：體質健全且穩健獲利！</strong><br>
+        門市不僅能穩穩支付你 <strong>${cBoss} 萬元</strong> 的月薪，每月還能產生 <strong>${cashProfit.toFixed(2)} 萬元</strong> 的落袋現金（扣除折舊後實賺 <strong>${netProfit.toFixed(2)} 萬元</strong>）。<br>
+        ${capInvest > 0 ? `開店本金預計可在 <strong>${paybackMonthsStr}</strong> 內完全回收。` : ''}
+      </div>`;
+  }
+
+  if (revDeliv > 0 && delivNetProfit < 0) {
+    alertBox.innerHTML += `
+      <div class="alert-box alert-red">
+        <strong>⚠️ 外送虧損警示：外送渠道目前處於淨虧損狀態！</strong><br>
+        外送平台月營業額 ${revDeliv} 萬，扣除食材、包材、損耗與平台抽成後，淨利為 <strong>${delivNetProfit.toFixed(2)} 萬元</strong>。<br>
+        👉 <strong>作戰方針：</strong> 建議適度拉高外送菜單單價、選用低成本專屬外送包材，或調降平台贊助折扣，避免「做越多虧越多」。
+      </div>`;
+  }
+
+  if (revTotal < bepMonthly) {
+    alertBox.innerHTML += `
+      <div class="alert-box alert-red">
+        <strong>📉 業績危機警示：營業額尚未達到保本門檻！</strong><br>
+        月營業額 (${revTotal} 萬) 低於保本門檻 <strong>${bepMonthly.toFixed(2)} 萬</strong> (日保本 <strong>${Math.round(bepDailyRev).toLocaleString()} 元</strong>)。<br>
+        目前每天來客數為 <strong>${dailyCustomers} 人</strong>，每天至少需要 <strong>${bepDailyCount} 人</strong> (客單價 ${avgTicket} 元) 才能保本。
+      </div>`;
+  } else {
+    alertBox.innerHTML += `
+      <div class="alert-box alert-blue">
+        <strong>📈 業績安全度診斷：營業額已越過保本線</strong><br>
+        月營業額 (${revTotal} 萬) 高於保本門檻 <strong>${bepMonthly.toFixed(2)} 萬</strong> (日保本 <strong>${Math.round(bepDailyRev).toLocaleString()} 元 / ${bepDailyCount} 來客</strong>)。
+      </div>`;
+  }
+
+  document.getElementById('result-section').style.display = 'block';
+  document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function getRangeLight(val, min, mid, max) {
+  if (val < min) return { type: 'green', text: '🟢 優秀 (低於標準)' };
+  if (val <= mid) return { type: 'yellow', text: '🟡 正常 (前半段)' };
+  if (val <= max) return { type: 'orange', text: '🟠 預警 (接近上限)' };
+  return { type: 'red', text: '🔴 危險 (超出上限)' };
+}
+
+function getLimitLight(val, limit) {
+  const l66 = limit * 0.66;
+  const l83 = limit * 0.83;
+  if (val < l66) return { type: 'green', text: '🟢 優秀 (極為安全)' };
+  if (val < l83) return { type: 'yellow', text: '🟡 正常 (安全區間)' };
+  if (val <= limit) return { type: 'orange', text: '🟠 預警 (接近上限)' };
+  return { type: 'red', text: '🔴 危險 (超標嚴重)' };
+}
+
+function renderBadge(badgeId, detailId, lightObj, valStr, specStr) {
+  const badgeEl = document.getElementById(badgeId);
+  const detailEl = document.getElementById(detailId);
+  badgeEl.className = `badge badge-${lightObj.type}`;
+  badgeEl.innerText = lightObj.text;
+  detailEl.innerText = `目前: ${valStr} (${specStr})`;
+}
+</script>
+
+</body>
+</html>
